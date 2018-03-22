@@ -1,0 +1,35 @@
+{
+  "name": "amorph",
+  "version": "0.0.1",
+  "description": "transform json",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha ./test",
+    "demo": "node ./example.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/YaroslavGaponov/amorph.git"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "dependencies": {
+    "gulp-mocha": "^5.0.0",
+    "mocha": "^5.0.4"
+  },
+  "keywords": [
+    "json",
+    "ast",
+    "transform"
+  ],
+  "author": "Yaroslav Gaponov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/YaroslavGaponov/amorph/issues"
+  },
+  "homepage": "https://github.com/YaroslavGaponov/amorph#readme"
+}
