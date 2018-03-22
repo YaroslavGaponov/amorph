@@ -1,5 +1,5 @@
 {
-  "name": "amorph",
+  "name": "json-amorph",
   "version": "0.0.1",
   "description": "transform json",
   "main": "index.js",
