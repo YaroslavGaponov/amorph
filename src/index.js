@@ -20,28 +20,80 @@ function createNode (type, value) {
   };
 }
 
+function createString (s) {
+  assert (s);
+  assert (util.isString (s));
+  return createNode (AstType.string, s);
+}
+
+function createNumber (n) {
+  assert (util.isNumber (n));
+  return createNode (AstType.number, n);
+}
+
+function createBoolean (b) {
+  assert (util.isBoolean (b));
+  return createNode (AstType.boolean, b);
+}
+
+function createKey (s) {
+  assert (s);
+  assert (util.isString (s));
+  return createNode (AstType.key, createString (s));
+}
+
+function createValue (v) {
+  return createNode (AstType.value, v);
+}
+
+function createPair (key, value) {
+  return createNode (AstType.pair, [createKey (key), createValue (value)]);
+}
+
+function createArray (e) {
+  return createNode (AstType.array, e);
+}
+
+function createObject (pairs) {
+  return createNode (AstType.object, pairs);
+}
+
+function getKeyName(key) {
+  assert(key);
+  assert(key.type == AstType.key);
+  assert(key.value.type === AstType.string);
+  return key.value.value;
+}
+function parsePair (pair) {
+  assert (pair);
+  assert (pair.type === AstType.pair);
+  let key, value;
+  for (let i = 0; i < pair.value.length; i++) {
+    switch (pair.value[i].type) {
+      case AstType.key:
+        key = pair.value[i].value.value;
+        break;
+      case AstType.value:
+        value = pair.value[i].value.value;
+        break;
+    }
+  }
+  return {key, value};
+}
+
 function json2ast (value) {
   if (util.isArray (value)) {
-    return createNode (
-      AstType.array,
-      value.map (element => json2ast (element))
-    );
+    return createArray (value.map (element => json2ast (element)));
   } else if (util.isObject (value)) {
-    return createNode (
-      AstType.object,
-      Object.keys (value).map (key =>
-        createNode (AstType.pair, [
-          createNode (AstType.key, json2ast (key)),
-          createNode (AstType.value, json2ast (value[key])),
-        ])
-      )
+    return createObject (
+      Object.keys (value).map (key => createPair (key, json2ast (value[key])))
     );
   } else if (util.isBoolean (value)) {
-    return createNode (AstType.boolean, value);
+    return createBoolean (value);
   } else if (util.isString (value)) {
-    return createNode (AstType.string, value);
+    return createString (value);
   } else if (util.isNumber (value)) {
-    return createNode (AstType.number, value);
+    return createNumber (value);
   }
 }
 
@@ -125,7 +177,18 @@ function walk (callback) {
 
 const API = {
   AstType,
-  createNode,
+
+  createString,
+  createNumber,
+  createBoolean,
+  createKey,
+  createValue,
+  createPair,
+  createArray,
+  createObject,
+
+  getKeyName,
+  parsePair,
 };
 
 function transform (json, plugins = []) {

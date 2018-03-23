@@ -3,7 +3,7 @@ Amorph [![Build Status](https://travis-ci.org/YaroslavGaponov/amorph.svg?branch=
 Convert JSON to AST, AST to JSON and transformation
 
 
-# Example
+# Example  #1 [example.js]
 
 ```javascript
 const {json2ast, ast2json, transform} = require ('./index.js');
@@ -82,5 +82,98 @@ NEW AST: { type: 'object',
      { type: 'pair', value: [Array] },
      { type: 'pair', value: [Array] } ] }
 -------------------
+
+```
+
+
+# Example #2 [simple.sj]
+
+Convert from some general user search request to Elasticsearch Query DSL format
+
+From 
+```json
+{"prompt":"Hello world","offset":5,"limit":15,"language":"en"}
+
+```
+
+To
+```json
+{"query":{"query_string":{"query":"Hello world"}},"from":5,"size":15,"type":"en_document"}
+```
+
+Source
+```javascript
+const Amorph = require ('./index.js');
+
+const UserSearchRequest = {
+  prompt: 'Hello world',
+  offset: 5,
+  limit: 15,
+  language: 'en',
+};
+
+function pluginPagination (api) {
+  return {
+    [api.AstType.key]: key => {
+      switch (api.getKeyName (key)) {
+        case 'offset':
+          key.value = api.createString ('from');
+          break;
+        case 'limit':
+          key.value = api.createString ('size');
+          break;
+      }
+    },
+  };
+}
+
+function pluginLanguage (api) {
+  return {
+    [api.AstType.pair]: pair => {
+      const kv = api.parsePair (pair);
+      if (kv.key === 'language') {
+        pair.value = [
+          api.createKey ('type'),
+          api.createValue (api.createString (kv.value + '_document')),
+        ];
+      }
+    },
+  };
+}
+
+function pluginPrompt (api) {
+  return {
+    [api.AstType.pair]: pair => {
+      const kv = api.parsePair (pair);
+      if (kv.key === 'prompt') {
+        pair.value = [
+          api.createKey ('query'),
+          api.createValue (
+            api.createObject ([
+              api.createPair (
+                'query_string',
+                api.createObject ([
+                  api.createPair ('query', api.createString (kv.value)),
+                ])
+              ),
+            ])
+          ),
+        ];
+      }
+    },
+  };
+}
+
+const ElasticSearchRequest = Amorph.transform (UserSearchRequest, [
+  pluginPagination,
+  pluginLanguage,
+  pluginPrompt,
+]);
+
+console.log ();
+console.log (JSON.stringify (UserSearchRequest));
+console.log ();
+console.log (JSON.stringify (ElasticSearchRequest.json));
+console.log ();
 
 ```
